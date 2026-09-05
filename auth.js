@@ -8,71 +8,40 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
 
 import {
-    collection,
-    getDocs,
     doc,
+    getDoc,
     setDoc,
     serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
 
-// ======================================================
-// FIND USER FROM FIRESTORE
-// ======================================================
+// ===============================
+// FIND USER DATA
+// ===============================
 
 async function findUserData(uid) {
 
-    const snapshot = await getDocs(
-        collection(db, "users")
-    );
+    const userRef = doc(db, "users", uid);
+    const snapshot = await getDoc(userRef);
 
-    for (const userDoc of snapshot.docs) {
-
-        const data = userDoc.data();
-
-        // Existing users
-        // where UID is stored inside the document
-        if (data.uid === uid) {
-
-            return {
-                id: userDoc.id,
-                data: data
-            };
-        }
-
-        // New users
-        // where document ID is the UID
-        if (userDoc.id === uid) {
-
-            return {
-                id: userDoc.id,
-                data: data
-            };
-        }
+    if (snapshot.exists()) {
+        return {
+            id: snapshot.id,
+            data: snapshot.data()
+        };
     }
 
     return null;
 }
 
 
-// ======================================================
-// FIREBASE ERROR
-// ======================================================
+// ===============================
+// FIREBASE ERROR MESSAGE
+// ===============================
 
 function firebaseError(error) {
 
-    console.error("Firebase Error:", error);
-
     switch (error.code) {
-
-        case "auth/invalid-credential":
-            return "Invalid email or password.";
-
-        case "auth/user-not-found":
-            return "Account not found.";
-
-        case "auth/wrong-password":
-            return "Incorrect password.";
 
         case "auth/email-already-in-use":
             return "This email is already registered.";
@@ -81,431 +50,278 @@ function firebaseError(error) {
             return "Please enter a valid email.";
 
         case "auth/weak-password":
-            return "Password must be at least 6 characters.";
+            return "Password should be at least 6 characters.";
+
+        case "auth/invalid-credential":
+        case "auth/wrong-password":
+        case "auth/user-not-found":
+            return "Invalid email or password.";
 
         default:
-            return "Firebase Error: " + error.code;
+            return error.message;
     }
 }
 
 
-// ======================================================
+// ===============================
 // SIGN UP
-// ======================================================
+// ===============================
 
-const signupForm =
-    document.getElementById("signupForm");
+const signupForm = document.getElementById("signupForm");
 
 if (signupForm) {
 
-    signupForm.addEventListener(
-        "submit",
-        async function (event) {
-
-            event.preventDefault();
-
-            try {
-
-                const name =
-                    document.getElementById("signupName")?.value.trim()
-                    ||
-                    document.getElementById("name")?.value.trim()
-                    ||
-                    "";
-
-                const email =
-                    document.getElementById("signupEmail")?.value.trim()
-                    ||
-                    document.getElementById("email")?.value.trim()
-                    ||
-                    "";
-
-                const password =
-                    document.getElementById("signupPassword")?.value
-                    ||
-                    document.getElementById("password")?.value
-                    ||
-                    "";
-
-                const phone =
-                    document.getElementById("signupPhone")?.value.trim()
-                    ||
-                    document.getElementById("phone")?.value.trim()
-                    ||
-                    "";
-
-                const institution =
-                    document.getElementById("signupInstitution")?.value.trim()
-                    ||
-                    document.getElementById("institution")?.value.trim()
-                    ||
-                    "";
-
-
-                if (!email || !password) {
-
-                    alert(
-                        "Please enter email and password."
-                    );
-
-                    return;
-                }
-
-
-                // Create Firebase account
-
-                const credential =
-                    await createUserWithEmailAndPassword(
-                        auth,
-                        email,
-                        password
-                    );
-
-                const user =
-                    credential.user;
-
-
-                // ======================================
-                // EVERY NEW ACCOUNT = USER
-                // ======================================
-
-                await setDoc(
-                    doc(
-                        db,
-                        "users",
-                        user.uid
-                    ),
-                    {
-
-                        uid: user.uid,
-
-                        name: name || "User",
-
-                        email: user.email,
-
-                        accountEmail: user.email,
-
-                        phone: phone,
-
-                        institution: institution,
-
-                        role: "user",
-
-                        provider: "password",
-
-                        quizCompleted: false,
-
-                        quizScore: 0,
-
-                        workshopRegistered: false,
-
-                        createdAt: serverTimestamp(),
-
-                        lastLogin: serverTimestamp()
-                    }
-                );
-
-
-                alert(
-                    "Account created successfully!"
-                );
-
-
-                window.location.href =
-                    "index.html";
-
-
-            } catch (error) {
-
-                alert(
-                    firebaseError(error)
-                );
-
-            }
-
-        }
-    );
-}
-
-
-// ======================================================
-// LOGIN
-// ======================================================
-
-const loginForm =
-    document.getElementById("loginForm");
-
-if (loginForm) {
-
-    loginForm.addEventListener(
-        "submit",
-        async function (event) {
-
-            event.preventDefault();
-
-            try {
-
-                const email =
-                    document.getElementById("loginEmail")?.value.trim()
-                    ||
-                    document.getElementById("email")?.value.trim()
-                    ||
-                    "";
-
-                const password =
-                    document.getElementById("loginPassword")?.value
-                    ||
-                    document.getElementById("password")?.value
-                    ||
-                    "";
-
-
-                if (!email || !password) {
-
-                    alert(
-                        "Please enter email and password."
-                    );
-
-                    return;
-                }
-
-
-                // ======================================
-                // FIREBASE AUTH LOGIN
-                // ======================================
-
-                const credential =
-                    await signInWithEmailAndPassword(
-                        auth,
-                        email,
-                        password
-                    );
-
-
-                const firebaseUser =
-                    credential.user;
-
-
-                console.log(
-                    "Firebase UID:",
-                    firebaseUser.uid
-                );
-
-
-                // ======================================
-                // FIND FIRESTORE USER
-                // ======================================
-
-                const result =
-                    await findUserData(
-                        firebaseUser.uid
-                    );
-
-
-                if (!result) {
-
-                    console.error(
-                        "No Firestore user found for UID:",
-                        firebaseUser.uid
-                    );
-
-
-                    alert(
-                        "Your Firebase account exists, but its user profile was not found in Firestore."
-                    );
-
-                    return;
-                }
-
-
-                const userData =
-                    result.data;
-
-
-                console.log(
-                    "Firestore User:",
-                    userData
-                );
-
-
-                // ======================================
-                // UPDATE LAST LOGIN
-                // ======================================
-
-                await setDoc(
-                    doc(
-                        db,
-                        "users",
-                        result.id
-                    ),
-                    {
-                        lastLogin:
-                            serverTimestamp()
-                    },
-                    {
-                        merge: true
-                    }
-                );
-
-
-                // ======================================
-                // ADMIN
-                // ======================================
-
-                if (
-                    userData.role === "admin"
-                ) {
-
-                    console.log(
-                        "ADMIN LOGIN"
-                    );
-
-
-                    window.location.href =
-                        "admin.html";
-
-
-                    return;
-                }
-
-
-                // ======================================
-                // NORMAL USER
-                // ======================================
-
-                console.log(
-                    "NORMAL USER LOGIN"
-                );
-
-
-                window.location.href =
-                    "index.html";
-
-
-            } catch (error) {
-
-                console.error(
-                    error
-                );
-
-
-                alert(
-                    firebaseError(error)
-                );
-
-            }
-
-        }
-    );
-}
-
-
-// ======================================================
-// DISPLAY USER
-// ======================================================
-
-onAuthStateChanged(
-    auth,
-    async function (user) {
-
-        const userArea =
-            document.getElementById(
-                "userArea"
-            );
-
-
-        if (!userArea) {
-            return;
-        }
-
-
-        if (!user) {
-
-            userArea.innerHTML = `
-                <a href="login.html">
-                    Login
-                </a>
-
-                <a href="signup.html">
-                    Sign Up
-                </a>
-            `;
-
-            return;
-        }
-
+    signupForm.addEventListener("submit", async (e) => {
+
+        e.preventDefault();
+
+        const name =
+            document.getElementById("signupName")?.value.trim() ||
+            document.getElementById("name")?.value.trim();
+
+        const email =
+            document.getElementById("signupEmail")?.value.trim() ||
+            document.getElementById("email")?.value.trim();
+
+        const password =
+            document.getElementById("signupPassword")?.value ||
+            document.getElementById("password")?.value;
+
+        const phone =
+            document.getElementById("signupPhone")?.value.trim() ||
+            document.getElementById("phone")?.value.trim() ||
+            "";
+
+        const institution =
+            document.getElementById("signupInstitution")?.value.trim() ||
+            document.getElementById("institution")?.value.trim() ||
+            "";
 
         try {
 
-            const result =
-                await findUserData(
-                    user.uid
+            const userCredential =
+                await createUserWithEmailAndPassword(
+                    auth,
+                    email,
+                    password
                 );
 
+            const user = userCredential.user;
+
+            await setDoc(doc(db, "users", user.uid), {
+
+                uid: user.uid,
+                name: name || "User",
+                email: user.email,
+                accountEmail: user.email,
+                phone: phone,
+                institution: institution,
+
+                role: "user",
+
+                provider: "password",
+
+                quizCompleted: false,
+                quizScore: 0,
+                workshopRegistered: false,
+
+                createdAt: serverTimestamp(),
+                lastLogin: serverTimestamp()
+
+            });
+
+            alert("Account created successfully!");
+
+            window.location.href = "index.html";
+
+        } catch (error) {
+
+            alert(firebaseError(error));
+
+        }
+
+    });
+}
+
+
+// ===============================
+// LOGIN
+// ===============================
+
+const loginForm = document.getElementById("loginForm");
+
+if (loginForm) {
+
+    loginForm.addEventListener("submit", async (e) => {
+
+        e.preventDefault();
+
+        const email =
+            document.getElementById("loginEmail")?.value.trim() ||
+            document.getElementById("email")?.value.trim();
+
+        const password =
+            document.getElementById("loginPassword")?.value ||
+            document.getElementById("password")?.value;
+
+        try {
+
+            const userCredential =
+                await signInWithEmailAndPassword(
+                    auth,
+                    email,
+                    password
+                );
+
+            const user = userCredential.user;
+
+            const userData = await findUserData(user.uid);
+
+            if (userData) {
+
+                await setDoc(
+                    doc(db, "users", user.uid),
+                    {
+                        lastLogin: serverTimestamp()
+                    },
+                    { merge: true }
+                );
+
+                if (userData.data.role === "admin") {
+
+                    window.location.href = "admin.html";
+
+                } else {
+
+                    window.location.href = "index.html";
+
+                }
+
+            } else {
+
+                alert("User profile not found.");
+
+            }
+
+        } catch (error) {
+
+            alert(firebaseError(error));
+
+        }
+
+    });
+}
+
+
+// ===============================
+// SHOW USER IN NAVBAR
+// ===============================
+
+onAuthStateChanged(auth, async (user) => {
+
+    const userArea = document.getElementById("userArea");
+
+    if (!userArea) return;
+
+
+    // USER IS LOGGED IN
+    if (user) {
+
+        try {
+
+            const userData = await findUserData(user.uid);
 
             const name =
-                result?.data?.name
-                ||
-                user.email;
+                userData?.data?.name ||
+                user.displayName ||
+                user.email.split("@")[0];
 
 
             userArea.innerHTML = `
-                <span>
-                    👤 ${name}
-                </span>
+
+                <a href="profile.html" class="profile-link">
+                    <span class="profile-icon">👤</span>
+                    <span>${name}</span>
+                </a>
 
                 <button id="logoutButton">
                     Logout
                 </button>
+
             `;
 
 
+            // LOGOUT
             const logoutButton =
-                document.getElementById(
-                    "logoutButton"
-                );
-
+                document.getElementById("logoutButton");
 
             if (logoutButton) {
 
-                logoutButton.addEventListener(
-                    "click",
-                    async function () {
+                logoutButton.addEventListener("click", async () => {
 
-                        await signOut(
-                            auth
-                        );
+                    try {
 
-                        window.location.href =
-                            "index.html";
+                        await signOut(auth);
+
+                        window.location.href = "index.html";
+
+                    } catch (error) {
+
+                        console.error("Logout error:", error);
 
                     }
-                );
+
+                });
 
             }
 
         } catch (error) {
 
             console.error(
+                "Error loading user profile:",
                 error
             );
 
         }
 
     }
-);
+
+    // USER IS NOT LOGGED IN
+    else {
+
+        userArea.innerHTML = `
+
+            <a href="login.html" class="auth-link">
+                Login
+            </a>
+
+            <a href="signup.html" class="auth-link">
+                Sign Up
+            </a>
+
+        `;
+
+    }
+
+});
 
 
-// ======================================================
-// GLOBAL LOGOUT
-// ======================================================
+// ===============================
+// GLOBAL LOGOUT FUNCTION
+// ===============================
 
-window.logoutUser =
-    async function () {
+window.logoutUser = async function () {
+
+    try {
 
         await signOut(auth);
 
-        window.location.href =
-            "index.html";
+        window.location.href = "index.html";
 
-    };
+    } catch (error) {
+
+        console.error(error);
+
+    }
+
+};
