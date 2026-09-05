@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>My Profile | CyberShield</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Inter, Arial, sans-serif;
+            background: #050b16;
+            color: white;
+        }
+
+        .profile-page {
+            min-height: 100vh;
+            padding: 110px 20px 50px;
+        }
+
+        .profile-container {
+            max-width: 1000px;
+            margin: auto;
+        }
+
+        .profile-header {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .profile-header h1 {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        .profile-header h1 span {
+            color: #00e5ff;
+        }
+
+        .profile-header p {
+            color: #9ba8b8;
+        }
+
+        .profile-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .profile-card {
+            background: rgba(12, 25, 43, 0.95);
+            border: 1px solid rgba(0, 229, 255, 0.2);
+            border-radius: 18px;
+            padding: 25px;
+            box-shadow: 0 15px 40px rgba(0,0,0,.25);
+        }
+
+        .profile-card h2 {
+            margin-top: 0;
+            color: #00e5ff;
+            font-size: 21px;
+        }
+
+        .profile-avatar {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            background: rgba(0,229,255,.12);
+            border: 2px solid rgba(0,229,255,.4);
+        }
+
+        .personal-card {
+            text-align: center;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 13px 0;
+            border-bottom: 1px solid rgba(255,255,255,.08);
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: #8e9aaa;
+        }
+
+        .info-value {
+            text-align: right;
+            font-weight: 600;
+            word-break: break-word;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            background: rgba(0,229,255,.12);
+            color: #00e5ff;
+            font-size: 13px;
+        }
+
+        .score-box {
+            text-align: center;
+            padding: 20px;
+            margin-top: 10px;
+            border-radius: 15px;
+            background: rgba(0,229,255,.06);
+        }
+
+        .score-box strong {
+            display: block;
+            font-size: 42px;
+            color: #00e5ff;
+            margin-bottom: 5px;
+        }
+
+        .activity-item {
+            padding: 15px;
+            margin-top: 12px;
+            border-radius: 12px;
+            background: rgba(255,255,255,.04);
+            border: 1px solid rgba(255,255,255,.07);
+        }
+
+        .activity-item strong {
+            color: #00e5ff;
+        }
+
+        .no-data {
+            color: #9ba8b8;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .profile-actions {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .profile-actions button,
+        .profile-actions a {
+            display: inline-block;
+            padding: 12px 22px;
+            margin: 5px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .back-button {
+            background: #00e5ff;
+            color: #001018;
+        }
+
+        .logout-button {
+            background: #ff4d67;
+            color: white;
+        }
+
+        .loading {
+            text-align: center;
+            color: #00e5ff;
+            padding: 40px;
+        }
+
+        @media (max-width: 700px) {
+
+            .profile-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .profile-header h1 {
+                font-size: 30px;
+            }
+
+            .info-row {
+                flex-direction: column;
+                gap: 5px;
+            }
+
+            .info-value {
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="profile-page">
+
+    <div class="profile-container">
+
+        <div class="profile-header">
+            <div class="profile-avatar">👤</div>
+
+            <h1>
+                My <span>CyberShield Profile</span>
+            </h1>
+
+            <p>
+                View your account and CyberShield activity
+            </p>
+        </div>
+
+        <div id="loading" class="loading">
+            Loading profile...
+        </div>
+
+        <div id="profileContent" style="display:none;">
+
+            <div class="profile-grid">
+
+                <!-- PERSONAL INFORMATION -->
+                <div class="profile-card personal-card">
+
+                    <h2>👤 Personal Information</h2>
+
+                    <div class="info-row">
+                        <span class="info-label">Name</span>
+                        <span class="info-value" id="profileName">-</span>
+                    </div>
+
+                    <div class="info-row">
+                        <span class="info-label">Email</span>
+                        <span class="info-value" id="profileEmail">-</span>
+                    </div>
+
+                    <div class="info-row">
+                        <span class="info-label">Phone</span>
+                        <span class="info-value" id="profilePhone">-</span>
+                    </div>
+
+                    <div class="info-row">
+                        <span class="info-label">Institution</span>
+                        <span class="info-value" id="profileInstitution">-</span>
+                    </div>
+
+                    <div class="info-row">
+                        <span class="info-label">Role</span>
+                        <span class="info-value">
+                            <span class="status" id="profileRole">User</span>
+                        </span>
+                    </div>
+
+                    <div class="info-row">
+                        <span class="info-label">Account Created</span>
+                        <span class="info-value" id="profileCreated">-</span>
+                    </div>
+
+                </div>
+
+
+                <!-- QUIZ -->
+                <div class="profile-card">
+
+                    <h2>🧠 Quiz Activity</h2>
+
+                    <div id="quizData">
+
+                        <div class="no-data">
+                            Loading quiz information...
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- WORKSHOP -->
+                <div class="profile-card">
+
+                    <h2>📝 Workshop Activity</h2>
+
+                    <div id="workshopData">
+
+                        <div class="no-data">
+                            Loading workshop information...
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ACCOUNT -->
+                <div class="profile-card">
+
+                    <h2>🔐 Account Status</h2>
+
+                    <div class="info-row">
+                        <span class="info-label">Account</span>
+
+                        <span class="info-value">
+                            <span class="status">Active</span>
+                        </span>
+                    </div>
+
+                    <div class="info-row">
+                        <span class="info-label">Authentication</span>
+
+                        <span class="info-value">
+                            Firebase
+                        </span>
+                    </div>
+
+                    <div class="info-row">
+                        <span class="info-label">Security</span>
+
+                        <span class="info-value">
+                            Protected
+                        </span>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="profile-actions">
+
+                <a href="index.html" class="back-button">
+                    ← Back to CyberShield
+                </a>
+
+                <button id="logoutButton" class="logout-button">
+                    Logout
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script type="module">
+
+import { auth, db } from "./firebase-config.js";
+
+import {
+    onAuthStateChanged,
+    signOut
+} from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
+
+import {
+    doc,
+    getDoc,
+    collection,
+    query,
+    where,
+    getDocs
+} from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+
+
+const loading =
+    document.getElementById("loading");
+
+const profileContent =
+    document.getElementById("profileContent");
+
+
+function formatDate(timestamp) {
+
+    if (!timestamp) {
+        return "Not available";
+    }
+
+    try {
+
+        return timestamp
+            .toDate()
+            .toLocaleString();
+
+    } catch {
+
+        return "Not available";
+
+    }
+}
+
+
+onAuthStateChanged(
+    auth,
+    async (user) => {
+
+        if (!user) {
+
+            window.location.href =
+                "login.html";
+
+            return;
+
+        }
+
+
+        try {
+
+            // =====================================
+            // GET USER PROFILE
+            // =====================================
+
+            const userRef =
+                doc(
+                    db,
+                    "users",
+                    user.uid
+                );
+
+            const userSnap =
+                await getDoc(userRef);
+
+
+            if (!userSnap.exists()) {
+
+                loading.textContent =
+                    "User profile not found.";
+
+                return;
+
+            }
+
+
+            const data =
+                userSnap.data();
+
+
+            document.getElementById(
+                "profileName"
+            ).textContent =
+                data.name || user.email;
+
+
+            document.getElementById(
+                "profileEmail"
+            ).textContent =
+                data.email || user.email;
+
+
+            document.getElementById(
+                "profilePhone"
+            ).textContent =
+                data.phone || "Not provided";
+
+
+            document.getElementById(
+                "profileInstitution"
+            ).textContent =
+                data.institution || "Not provided";
+
+
+            document.getElementById(
+                "profileRole"
+            ).textContent =
+                data.role || "user";
+
+
+            document.getElementById(
+                "profileCreated"
+            ).textContent =
+                formatDate(data.createdAt);
+
+
+            // =====================================
+            // GET QUIZ RESULTS
+            // =====================================
+
+            const quizQuery =
+                query(
+                    collection(db, "quizResults"),
+                    where(
+                        "uid",
+                        "==",
+                        user.uid
+                    )
+                );
+
+
+            const quizSnapshot =
+                await getDocs(quizQuery);
+
+
+            const quizData =
+                document.getElementById(
+                    "quizData"
+                );
+
+
+            if (quizSnapshot.empty) {
+
+                quizData.innerHTML = `
+                    <div class="no-data">
+                        You have not completed the quiz yet.
+                    </div>
+                `;
+
+            } else {
+
+                let html = "";
+
+                quizSnapshot.forEach(
+                    quizDoc => {
+
+                        const quiz =
+                            quizDoc.data();
+
+                        const percentage =
+                            quiz.total
+                                ? Math.round(
+                                    (quiz.score /
+                                    quiz.total) * 100
+                                )
+                                : 0;
+
+                        html += `
+
+                            <div class="activity-item">
+
+                                <strong>
+                                    Score: ${quiz.score} / ${quiz.total}
+                                </strong>
+
+                                <p>
+                                    ${percentage}% correct
+                                </p>
+
+                                <small>
+                                    ${formatDate(
+                                        quiz.createdAt
+                                    )}
+                                </small>
+
+                            </div>
+                        `;
+
+                    }
+                );
+
+                quizData.innerHTML = html;
+
+            }
+
+
+            // =====================================
+            // GET WORKSHOP DATA
+            // =====================================
+
+            const workshopQuery =
+                query(
+                    collection(db, "workshops"),
+                    where(
+                        "uid",
+                        "==",
+                        user.uid
+                    )
+                );
+
+
+            const workshopSnapshot =
+                await getDocs(workshopQuery);
+
+
+            const workshopData =
+                document.getElementById(
+                    "workshopData"
+                );
+
+
+            if (workshopSnapshot.empty) {
+
+                workshopData.innerHTML = `
+                    <div class="no-data">
+                        No workshop registration found.
+                    </div>
+                `;
+
+            } else {
+
+                let html = "";
+
+                workshopSnapshot.forEach(
+                    workshopDoc => {
+
+                        const workshop =
+                            workshopDoc.data();
+
+                        html += `
+
+                            <div class="activity-item">
+
+                                <strong>
+                                    ${workshop.topic || "Workshop"}
+                                </strong>
+
+                                <p>
+                                    Name:
+                                    ${workshop.name || "-"}
+                                </p>
+
+                                <p>
+                                    Institution:
+                                    ${workshop.institution || "-"}
+                                </p>
+
+                                <small>
+                                    Registered:
+                                    ${formatDate(
+                                        workshop.createdAt
+                                    )}
+                                </small>
+
+                            </div>
+
+                        `;
+
+                    }
+                );
+
+                workshopData.innerHTML = html;
+
+            }
+
+
+            loading.style.display =
+                "none";
+
+            profileContent.style.display =
+                "block";
+
+
+        } catch (error) {
+
+            console.error(
+                "Profile Error:",
+                error
+            );
+
+            loading.textContent =
+                "Unable to load profile information.";
+
+        }
+
+    }
+);
+
+
+// =====================================
+// LOGOUT
+// =====================================
+
+document
+    .getElementById("logoutButton")
+    .addEventListener(
+        "click",
+        async () => {
+
+            try {
+
+                await signOut(auth);
+
+                window.location.href =
+                    "login.html";
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert(
+                    "Logout failed."
+                );
+
+            }
+
+        }
+    );
+
+</script>
+
+</body>
+</html>
